@@ -1,0 +1,11 @@
+create table users ( user_id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(30) NOT NULL unique, password varchar(50) not null,  gcm_id VARCHAR(30) NOT NULL, home_location VARCHAR(30),  phone_number VARCHAR(13),  email_id VARCHAR(30) );
+
+create table group_details (   group_id INT(6) UNSIGNED AUTO_INCREMENT,   host_id INT(6) UNSIGNED,   max_ppl INT(10) NOT NULL,   final_dest VARCHAR(50) ,   meeting_time TIME, meeting_date DATE, FOREIGN KEY(host_id) REFERENCES users(user_id),  PRIMARY KEY (group_id,host_id))
+
+create table user_group_details ( user_id INT(6) UNSIGNED, group_id INT(6) UNSIGNED, selected_loc VARCHAR(50) NOT NULL, location VARCHAR(50) NOT NULL,PRIMARY KEY(user_id, group_id) ,FOREIGN KEY(user_id) REFERENCES users(user_id), FOREIGN KEY(group_id) REFERENCES group_details(group_id) );                          
+
+
+
+
+
+
