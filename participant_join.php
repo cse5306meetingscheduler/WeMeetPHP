@@ -1,5 +1,5 @@
 <?php
-
+include 'GCMPushMessage.php';
 $servername = getenv('IP');
 $username = getenv('C9_USER');
 $password = "";
@@ -71,7 +71,6 @@ try {
 		while ($row = $stmt->fetch()) {
             $count_group = $row['count_group_id'];
         }
-        echo("goup count = " . $count_group);
         if($count_group==$max_ppl){
             $lat_values = array();
             $long_values = array();
@@ -118,7 +117,73 @@ try {
             $conn->beginTransaction();
             $result_group = $conn->exec($query);
             $conn->commit();
+            $apiKey = "AIzaSyCUFbbJQDwyWIb36D-jrYdVmE51-iTh_xw";
+            $stmt = $conn->prepare("select gcm_id from users where user_id in (select user_id from user_group_details where group_id='" . $group_id . "')");
+		    $stmt->execute();
+		    $gcm_id_array = array();
+		    while ($row = $stmt->fetch()) {
+		        array_push($gcm_id_array,$row['gcm_id']);
+		    }
+            $devices = $gcm_id_array;
+            $message = "All users are registered for the meeting. Click here to select your choice of meeting place.";
+
+            $gcpm = new GCMPushMessage($apiKey);
+            $gcpm->setDevices($devices);
+            $response = $gcpm->send($message, array('title' => 'WeMeet', 'body' => $message));
+            $stmt = $conn->prepare("select feasible_midpoint, max_ppl from group_details where group_id = '" . $group_id . "'" );
+		    $stmt->execute();
+		    while ($row = $stmt->fetch()) {
+		        $feasible_midpoint = $row['feasible_midpoint'];
+		        $max_ppl = $row['max_ppl'];
+            }
+            $radius = 1500;
+            while(true){
+                $json = file_get_contents("https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCrjUsBQoM6zXPdhKzpXANDZ7tisHHHO3o&location=" . $feasible_midpoint . "&radius=" . $radius . "&types=restaurant"); // this will require php.ini to be setup to allow fopen over URLs
+                $data = json_decode($json);
+                $results = $data->results;
+                $i = 1;
+                if(count($results) >= 5){
+                    foreach($results as $result){
+                        $loc_id = $i;
+                        if(isset($result->price_level)){
+                            $price_level = $result->price_level;
+                        }
+                        else{
+                            $price_level = 0;
+                        }
             
+                        $name = $result->name;
+                        if(isset($result->rating)){
+                            $rating = $result->rating;
+                        }
+                        else{
+                            $rating = 0;
+                        }
+                        $address = $result->vicinity;
+                        $latitude = $result->geometry->location->lat;
+                        $longitude = $result->geometry->location->lng;
+                        if(isset($result->photos[0]->photo_reference)){
+                            $image = $result->photos[0]->photo_reference;
+                        }
+                        else{
+                            $image = null;
+                        }
+                        $query = "INSERT INTO locations (group_id, loc_id, name, price_level, rating, address, latitude, longitude, image) VALUES ('$group_id','$loc_id'," . '"' . $name. '"' . ", '$price_level', '$rating', '$address', '$latitude', '$longitude', '$image')";
+                        echo $query;
+                        $conn->beginTransaction();
+                        $result_group = $conn->exec($query);
+                        $conn->commit();
+                        $i++;
+                        if($i>=6){
+                            break;
+                        }
+                    }
+                    break;
+                }
+                else{
+                    $radius = $radius + 500;
+                }
+            }
         }
     
     }
@@ -131,3 +196,4 @@ catch(PDOException $e)
 ?>
 
 //32.754751, -97.173471
+//https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=" . $result->photos[0]->photo_reference . "&key=AIzaSyCrjUsBQoM6zXPdhKzpXANDZ7tisHHHO3o";

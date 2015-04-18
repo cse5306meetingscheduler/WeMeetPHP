@@ -1,5 +1,4 @@
 <?php
-session_start();
 $servername = getenv('IP');
 $username = getenv('C9_USER');
 $password = "";
