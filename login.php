@@ -1,19 +1,11 @@
 <?php
-$servername = getenv('IP');
-$username = getenv('C9_USER');
-$password = "";
-$database = "c9";
-
-try {
-    $conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
-    // set the PDO error mode to exception
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	require 'config.php';
     if (isset($_POST['password']) && isset($_POST['username'])){
         $password = md5($_POST['password']);
         $username = $_POST['username'];
         $conn->beginTransaction();
-		$stmt = $conn->prepare("select home_location from users where username = '" . $username . "'and password = '" . $password . "'");
-		$stmt->execute();
+		$stmt = $conn->prepare("select home_location from users where username = ? and password = ?");
+		$stmt->execute(array($username,$password));
 		while ($row = $stmt->fetch()) {
             $home_location = $row['home_location'];
         }
@@ -34,7 +26,4 @@ try {
             echo json_encode($response);
 		}
 	}
-}
-catch(PDOException $e){
-    echo "Connection failed: " . $e->getMessage();
-}
+?>

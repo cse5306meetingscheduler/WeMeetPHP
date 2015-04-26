@@ -109,3 +109,4 @@ class GCMPushMessage {
 		exit(1);
 	}
 }
+

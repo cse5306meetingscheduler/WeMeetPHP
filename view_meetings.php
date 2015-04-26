@@ -1,23 +1,14 @@
 <?php
-session_start();
-$servername = getenv('IP');
-$username = getenv('C9_USER');
-$password = "";
-$database = "c9";
-
-try {
-    $conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
-    // set the PDO error mode to exception
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+require "config.php";
     if (isset($_POST['username'])){
         $username = $_POST['username'];
-        $stmt = $conn->prepare("select user_id from users where username = '" . $username . "'");
-		$stmt->execute();
+        $stmt = $conn->prepare("select user_id from users where username = ?");
+		$stmt->execute(array($username));
 		while ($row = $stmt->fetch()) {
             $user_id = $row['user_id'];
         }
-        $stmt = $conn->prepare("select group_id, meeting_time, meeting_date, final_dest, host_id, feasible_midpoint, max_ppl from group_details where group_id in (select group_id from user_group_details where user_id ='" . $user_id . "')" );
-		$stmt->execute();
+		$stmt = $conn->prepare("select group_id, meeting_time, meeting_date, final_dest, host_id, feasible_midpoint, max_ppl from group_details where group_id in (select group_id from user_group_details where user_id =?) order by group_id desc" );
+		$stmt->execute(array($user_id));
 		$response_array = array();
 		while ($row = $stmt->fetch()) {
 		    $response = array();
@@ -44,7 +35,4 @@ try {
 		    echo json_encode($result);
 		}
 	}
-}
-catch(PDOException $e){
-    echo "Connection failed: " . $e->getMessage();
-}
+?>
