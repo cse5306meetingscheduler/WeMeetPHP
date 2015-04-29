@@ -1,5 +1,9 @@
 <?php
+/*
+	* This page is used to return the final destination details
+*/
 require "config.php";
+	//client provides the groupid and the username
     if (isset($_POST['group_id']) && isset($_POST['username'])){
         $username = $_POST['username'];
         $group_id = $_POST['group_id'];
@@ -14,6 +18,7 @@ require "config.php";
 		while ($row = $stmt->fetch()) {
             $loc_id = $row['final_dest'];
         }
+        //the final destination details for the group_id is returned
 		$stmt = $conn->prepare("select loc_id, name, price_level, rating, address, latitude, longitude, image from locations where group_id = ? and loc_id=?");
 		$stmt->execute(array($group_id,$loc_id));
 		$response = array();

@@ -1,5 +1,9 @@
 <?php
+	/*
+	* This page is used for creating a meeting
+*/
 	require "config.php";
+	//meeeting details are provided by the client
     if (isset($_POST['max_ppl']) && isset($_POST['username']) && isset($_POST['meeting_time']) && isset($_POST['meeting_date']) && isset($_POST['location']) && isset($_POST['categories'])) {
         $max_ppl = $_POST['max_ppl'];
         $meeting_time = $_POST['meeting_time'];
@@ -13,6 +17,7 @@
 		while ($row = $stmt->fetch()) {
             $user_id = $row['user_id'];
         }
+        //the meeting details are insterted into the database
         $query = "INSERT INTO group_details (host_id, max_ppl, meeting_date, meeting_time, categories) VALUES (:user_id,:max_ppl,:meeting_date,:meeting_time,:categories)";
         $stmt = $conn->prepare($query);
         
